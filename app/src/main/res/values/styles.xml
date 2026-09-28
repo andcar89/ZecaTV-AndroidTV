@@ -1,0 +1,27 @@
+<resources>
+    <!--
+      MainActivity uses the Leanback library's own built-in "Theme.Leanback" directly
+      (set in AndroidManifest.xml) — do NOT redeclare a style with that exact name here.
+      Doing so overrides the library's real theme app-wide (app resources win over
+      library resources of the same name), which strips attributes ImageCardView needs
+      internally and crashes with "You must supply a layout_width attribute".
+    -->
+
+    <!-- Used by AddSourceActivity and PlayerActivity, which use AppCompatActivity -->
+    <style name="AppTheme.AppCompat" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/accent_color</item>
+        <item name="colorPrimaryDark">@color/background_color</item>
+        <item name="colorAccent">@color/accent_color</item>
+        <item name="android:windowBackground">@color/background_color</item>
+    </style>
+
+    <!-- Standard AppCompat buttons have a subtle default focus indicator, hard to spot on a TV
+         at a distance with D-pad navigation. This gives every button the same bold blue
+         highlight-on-focus already used by the sidebar/rail's custom widgets. -->
+    <style name="TvButton" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/tv_button_background</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:paddingHorizontal">20dp</item>
+        <item name="android:paddingVertical">12dp</item>
+    </style>
+</resources>

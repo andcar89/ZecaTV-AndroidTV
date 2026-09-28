@@ -1,0 +1,134 @@
+<resources>
+    <string name="app_name">ZecaTV</string>
+
+    <!-- Comum -->
+    <string name="action_remove">Remover</string>
+    <string name="action_switch">Mudar</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_play_with">Reproduzir com</string>
+    <string name="error_channel_not_found">Canal não encontrado</string>
+    <string name="error_no_external_player">Nenhuma aplicação de reprodução externa encontrada</string>
+    <string name="error_unknown">Erro desconhecido</string>
+    <string name="label_no_programme_info">Sem informação do programa</string>
+    <string name="category_favorites">Favoritos</string>
+    <string name="category_all_channels">Todos os canais</string>
+    <string name="category_uncategorized">Sem categoria</string>
+    <string name="toast_added_to_favorites">Adicionado aos favoritos</string>
+    <string name="toast_removed_from_favorites">Removido dos favoritos</string>
+    <string name="toast_playback_failed">Falha na reprodução: %1$s</string>
+    <string name="toast_failed_load_playlist">Falha ao carregar a lista: %1$s</string>
+    <string name="toast_no_favorites_yet">Ainda sem favoritos — mantenha premido um canal para adicionar</string>
+
+    <!-- Barra lateral -->
+    <string name="nav_search">Pesquisar</string>
+    <string name="nav_live_tv">TV em Direto</string>
+    <string name="nav_movies">Filmes</string>
+    <string name="nav_series">Séries</string>
+    <string name="nav_favorites">Favoritos</string>
+    <string name="nav_tv_guide">Guia de TV</string>
+    <string name="nav_settings">Definições</string>
+    <string name="category_all_movies">Todos os filmes</string>
+    <string name="category_all_series">Todas as séries</string>
+
+    <!-- Ecrã principal -->
+    <string name="grid_view_label">⊞ Vista em grelha</string>
+    <string name="list_view_label">☰ Vista em lista</string>
+    <string name="popup_action_add_favorite">★ Adicionar aos Favoritos</string>
+    <string name="popup_action_remove_favorite">☆ Remover dos Favoritos</string>
+    <string name="popup_action_assign_epg">Atribuir EPG do canal</string>
+
+    <!-- Ecrã de boas-vindas -->
+    <string name="welcome_add_playlist">Adicionar Lista</string>
+
+    <!-- Ecrã de adicionar fonte -->
+    <string name="add_source_title">Adicionar lista</string>
+    <string name="edit_playlist_title">Editar lista</string>
+    <string name="hint_playlist_name">Nome da lista (opcional)</string>
+    <string name="radio_m3u_url">URL M3U</string>
+    <string name="radio_m3u_file">Ficheiro M3U</string>
+    <string name="radio_xtream">Portal Xtream</string>
+    <string name="hint_playlist_url">URL da lista (http://.../playlist.m3u)</string>
+    <string name="hint_epg_url_optional">URL(s) XMLTV do EPG (opcional, separados por vírgula se houver mais do que um)</string>
+    <string name="button_pick_file">Escolher ficheiro M3U</string>
+    <string name="label_no_file_selected">Nenhum ficheiro selecionado</string>
+    <string name="hint_xtream_server">Servidor (http://host:porta)</string>
+    <string name="hint_username">Utilizador</string>
+    <string name="hint_password">Palavra-passe</string>
+    <string name="button_save_and_load">Guardar e carregar</string>
+    <string name="label_loading">A carregar…</string>
+    <string name="toast_enter_playlist_url">Introduza o URL da lista</string>
+    <string name="toast_pick_file_first">Escolha primeiro um ficheiro M3U</string>
+    <string name="toast_fill_xtream_fields">Preencha o servidor, utilizador e palavra-passe</string>
+    <string name="toast_choose_source_type">Escolha um tipo de fonte</string>
+    <string name="toast_loaded_no_channels">Carregado mas sem canais encontrados — verifique a fonte</string>
+    <string name="toast_loaded_n_channels">%1$d canais carregados</string>
+    <string name="toast_failed_prefix">Falha: %1$s</string>
+
+    <!-- Ecrã de definições -->
+    <string name="settings_playlist_header">Listas</string>
+    <string name="label_no_playlists">Ainda sem listas.</string>
+    <string name="playlist_source_m3u_url">URL da lista M3U: %1$s</string>
+    <string name="playlist_source_m3u_file">Ficheiro M3U: %1$s</string>
+    <string name="playlist_source_xtream">Portal Xtream: %1$s (utilizador: %2$s)</string>
+    <string name="button_add_playlist">Adicionar lista</string>
+    <string name="settings_epg_header">EPG</string>
+    <string name="settings_epg_description">O EPG do fornecedor (se existir) é sempre usado por predefinição. Adicione aqui URLs XMLTV extra e depois use \"Atribuir EPG do canal\" para associar canais específicos a uma entrada de guia específica de qualquer uma destas fontes.</string>
+    <string name="button_refresh_epg">Atualizar EPG agora</string>
+    <string name="label_add_new_epg_source">Adicionar nova fonte de EPG</string>
+    <string name="hint_epg_source_name">Nome (ex.: \"Guia de desporto\")</string>
+    <string name="hint_xmltv_url">URL XMLTV</string>
+    <string name="button_add_source">Adicionar fonte</string>
+    <string name="button_assign_channel_epg">Atribuir EPG do canal</string>
+    <string name="label_no_epg_sources">Ainda sem fontes de EPG.</string>
+    <string name="label_provider_epg_included">EPG do fornecedor (incluído)</string>
+    <string name="label_provider_epg_included_numbered">EPG do fornecedor %1$d (incluído)</string>
+    <string name="epg_status_loaded">✓ Carregado — %1$d canais, %2$d programas</string>
+    <string name="epg_status_not_loaded">Ainda não carregado</string>
+    <string name="epg_status_error">⚠ Falha: %1$s</string>
+    <string name="action_activate">Ativar</string>
+    <string name="action_deactivate">Desativar</string>
+    <string name="label_active_badge">ATIVO</string>
+    <string name="label_active_source_note">A correspondência automática usa apenas esta fonte</string>
+    <string name="label_loaded_automatically">Carregado automaticamente com a sua lista</string>
+    <string name="toast_enter_name_and_url">Introduza um nome e um URL</string>
+    <string name="status_refreshing_epg">A atualizar EPG…</string>
+    <string name="status_epg_refreshed">EPG atualizado</string>
+    <string name="status_switching_playlist">A mudar de lista…</string>
+    <string name="status_loading_named">A carregar \"%1$s\"…</string>
+    <string name="status_loaded_named">\"%1$s\" carregado</string>
+    <string name="settings_display_header">Visualização</string>
+    <string name="label_default_channel_view">Vista predefinida dos canais</string>
+    <string name="radio_list">Lista</string>
+    <string name="radio_grid">Grelha</string>
+    <string name="label_long_press_does">Manter premido um canal</string>
+    <string name="radio_long_press_menu">Mostrar menu (Favorito + Atribuir EPG)</string>
+    <string name="radio_long_press_favorite">Adicionar diretamente aos Favoritos, sem menu</string>
+    <string name="settings_language_header">Idioma</string>
+    <string name="radio_language_english">English</string>
+    <string name="radio_language_portuguese">Português</string>
+
+    <!-- Ecrã de atribuição de EPG -->
+    <string name="mapping_title">Atribuir EPG do canal</string>
+    <string name="mapping_description">Escolha um canal da lista e depois escolha qual a fonte de EPG e qual a entrada do guia nessa fonte que deve fornecer a informação do programa.</string>
+    <string name="label_playlist_channel">Canal da lista</string>
+    <string name="label_categories">Categorias</string>
+    <string name="label_epg_source">Fonte de EPG</string>
+    <string name="label_guide_channel">Canal do guia dentro dessa fonte</string>
+    <string name="button_save_mapping">Guardar atribuição</string>
+    <string name="label_current_mappings">Atribuições atuais</string>
+    <string name="toast_pick_channel_source_guide">Escolha primeiro um canal, uma fonte e uma entrada do guia</string>
+    <string name="status_saved_mapping">Guardado: %1$s → %2$s</string>
+    <string name="label_no_mappings_yet">Ainda sem atribuições.</string>
+    <string name="label_no_guide_channels_loaded">Nenhum canal do guia carregado</string>
+    <string name="mapping_row_format">%1$s  →  %2$s: %3$s</string>
+    <string name="error_could_not_open_file">Não foi possível abrir o ficheiro</string>
+    <string name="action_show_password">Mostrar</string>
+    <string name="action_hide_password">Ocultar</string>
+
+    <!-- Reprodutor: barra lateral de faixas (áudio/legendas), controlos de VOD -->
+    <string name="label_audio_tracks">Áudio</string>
+    <string name="label_subtitle_tracks">Legendas</string>
+    <string name="label_subtitles_off">Desativadas</string>
+    <string name="label_no_tracks_available">Não disponível para este stream</string>
+    <string name="label_track_unnamed">Faixa %1$d</string>
+</resources>

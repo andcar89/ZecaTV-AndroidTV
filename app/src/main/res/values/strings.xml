@@ -1,0 +1,134 @@
+<resources>
+    <string name="app_name">ZecaTV</string>
+
+    <!-- Common -->
+    <string name="action_remove">Remove</string>
+    <string name="action_switch">Switch</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_play_with">Play with</string>
+    <string name="error_channel_not_found">Channel not found</string>
+    <string name="error_no_external_player">No external player app found</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="label_no_programme_info">No programme info</string>
+    <string name="category_favorites">Favorites</string>
+    <string name="category_all_channels">All channels</string>
+    <string name="category_uncategorized">Uncategorized</string>
+    <string name="toast_added_to_favorites">Added to favorites</string>
+    <string name="toast_removed_from_favorites">Removed from favorites</string>
+    <string name="toast_playback_failed">Playback failed: %1$s</string>
+    <string name="toast_failed_load_playlist">Failed to load playlist: %1$s</string>
+    <string name="toast_no_favorites_yet">No favorites yet — long-press a channel to add one</string>
+
+    <!-- Sidebar rail tooltips -->
+    <string name="nav_search">Search</string>
+    <string name="nav_live_tv">Live TV</string>
+    <string name="nav_movies">Movies</string>
+    <string name="nav_series">TV Shows</string>
+    <string name="nav_favorites">Favorites</string>
+    <string name="nav_tv_guide">TV Guide</string>
+    <string name="nav_settings">Settings</string>
+    <string name="category_all_movies">All movies</string>
+    <string name="category_all_series">All TV shows</string>
+
+    <!-- Main screen -->
+    <string name="grid_view_label">⊞ Grid view</string>
+    <string name="list_view_label">☰ List view</string>
+    <string name="popup_action_add_favorite">★ Add to Favorites</string>
+    <string name="popup_action_remove_favorite">☆ Remove from Favorites</string>
+    <string name="popup_action_assign_epg">Assign channel EPG</string>
+
+    <!-- Welcome / start screen -->
+    <string name="welcome_add_playlist">Add Playlist</string>
+
+    <!-- Add source screen -->
+    <string name="add_source_title">Add playlist</string>
+    <string name="edit_playlist_title">Edit playlist</string>
+    <string name="hint_playlist_name">Playlist name (optional)</string>
+    <string name="radio_m3u_url">M3U URL</string>
+    <string name="radio_m3u_file">M3U File</string>
+    <string name="radio_xtream">Xtream Portal</string>
+    <string name="hint_playlist_url">Playlist URL (http://.../playlist.m3u)</string>
+    <string name="hint_epg_url_optional">EPG XMLTV URL(s) (optional, comma-separated for more than one)</string>
+    <string name="button_pick_file">Pick M3U file</string>
+    <string name="label_no_file_selected">No file selected</string>
+    <string name="hint_xtream_server">Server (http://host:port)</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="button_save_and_load">Save and load</string>
+    <string name="label_loading">Loading…</string>
+    <string name="toast_enter_playlist_url">Enter a playlist URL</string>
+    <string name="toast_pick_file_first">Pick an M3U file first</string>
+    <string name="toast_fill_xtream_fields">Fill in server, username and password</string>
+    <string name="toast_choose_source_type">Choose a source type</string>
+    <string name="toast_loaded_no_channels">Loaded but found no channels — check the source</string>
+    <string name="toast_loaded_n_channels">Loaded %1$d channels</string>
+    <string name="toast_failed_prefix">Failed: %1$s</string>
+
+    <!-- Settings screen -->
+    <string name="settings_playlist_header">Playlists</string>
+    <string name="label_no_playlists">No playlists yet.</string>
+    <string name="playlist_source_m3u_url">M3U playlist URL: %1$s</string>
+    <string name="playlist_source_m3u_file">M3U file: %1$s</string>
+    <string name="playlist_source_xtream">Xtream portal: %1$s (user: %2$s)</string>
+    <string name="button_add_playlist">Add playlist</string>
+    <string name="settings_epg_header">EPG</string>
+    <string name="settings_epg_description">The provider\'s own EPG (if any) is always used by default. Add extra XMLTV guide URLs here, then use \"Assign channel EPG\" to point specific channels at a specific guide entry from any of these sources.</string>
+    <string name="button_refresh_epg">Refresh EPG now</string>
+    <string name="label_add_new_epg_source">Add a new EPG source</string>
+    <string name="hint_epg_source_name">Name (e.g. \"Sports guide\")</string>
+    <string name="hint_xmltv_url">XMLTV URL</string>
+    <string name="button_add_source">Add source</string>
+    <string name="button_assign_channel_epg">Assign channel EPG</string>
+    <string name="label_no_epg_sources">No EPG sources yet.</string>
+    <string name="label_provider_epg_included">Provider EPG (included)</string>
+    <string name="label_provider_epg_included_numbered">Provider EPG %1$d (included)</string>
+    <string name="epg_status_loaded">✓ Loaded — %1$d channels, %2$d programmes</string>
+    <string name="epg_status_not_loaded">Not loaded yet</string>
+    <string name="epg_status_error">⚠ Failed: %1$s</string>
+    <string name="action_activate">Activate</string>
+    <string name="action_deactivate">Deactivate</string>
+    <string name="label_active_badge">ACTIVE</string>
+    <string name="label_active_source_note">Automatic matching uses only this source</string>
+    <string name="label_loaded_automatically">Loaded automatically with your playlist</string>
+    <string name="toast_enter_name_and_url">Enter both a name and a URL</string>
+    <string name="status_refreshing_epg">Refreshing EPG…</string>
+    <string name="status_epg_refreshed">EPG refreshed</string>
+    <string name="status_switching_playlist">Switching playlist…</string>
+    <string name="status_loading_named">Loading \"%1$s\"…</string>
+    <string name="status_loaded_named">\"%1$s\" loaded</string>
+    <string name="settings_display_header">Display</string>
+    <string name="label_default_channel_view">Default channel view</string>
+    <string name="radio_list">List</string>
+    <string name="radio_grid">Grid</string>
+    <string name="label_long_press_does">Long-press a channel does</string>
+    <string name="radio_long_press_menu">Show menu (Favorite + Assign EPG)</string>
+    <string name="radio_long_press_favorite">Add straight to Favorites, no menu</string>
+    <string name="settings_language_header">Language</string>
+    <string name="radio_language_english">English</string>
+    <string name="radio_language_portuguese">Português</string>
+
+    <!-- Channel mapping screen -->
+    <string name="mapping_title">Assign channel EPG</string>
+    <string name="mapping_description">Pick a playlist channel, then choose which EPG source and which guide entry inside it should supply its programme info.</string>
+    <string name="label_playlist_channel">Playlist channel</string>
+    <string name="label_categories">Categories</string>
+    <string name="label_epg_source">EPG source</string>
+    <string name="label_guide_channel">Guide channel inside that source</string>
+    <string name="button_save_mapping">Save mapping</string>
+    <string name="label_current_mappings">Current mappings</string>
+    <string name="toast_pick_channel_source_guide">Pick a channel, source and guide entry first</string>
+    <string name="status_saved_mapping">Saved: %1$s → %2$s</string>
+    <string name="label_no_mappings_yet">No mappings yet.</string>
+    <string name="label_no_guide_channels_loaded">No guide channels loaded</string>
+    <string name="mapping_row_format">%1$s  →  %2$s: %3$s</string>
+    <string name="error_could_not_open_file">Could not open file</string>
+    <string name="action_show_password">Show</string>
+    <string name="action_hide_password">Hide</string>
+
+    <!-- Player: tracks sidebar (audio/subtitles), VOD controls -->
+    <string name="label_audio_tracks">Audio</string>
+    <string name="label_subtitle_tracks">Subtitles</string>
+    <string name="label_subtitles_off">Off</string>
+    <string name="label_no_tracks_available">Not available for this stream</string>
+    <string name="label_track_unnamed">Track %1$d</string>
+</resources>

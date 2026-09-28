@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@color/background_color">
+
+    <!-- Icon rail: always visible, fixed width. Logo pinned top, nav icons centered
+         vertically between logo and settings, settings pinned bottom. -->
+    <LinearLayout
+        android:id="@+id/sidebar_rail"
+        android:layout_width="64dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#15171C"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/logo_text"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:gravity="center"
+            android:text="ZTV"
+            android:textColor="#1565C0"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:id="@+id/icon_search"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_search"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/sidebar_item_background" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="20dp" />
+
+        <ImageView
+            android:id="@+id/icon_live"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_live"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/sidebar_item_background" />
+
+        <ImageView
+            android:id="@+id/icon_movies"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="4dp"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_movies"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/sidebar_item_background"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/icon_series"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="4dp"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_series"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/sidebar_item_background"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/icon_favorites"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="4dp"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_favorites"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/sidebar_item_background" />
+
+        <ImageView
+            android:id="@+id/icon_tv_guide"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="4dp"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_tv_guide"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/sidebar_item_background" />
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <ImageView
+            android:id="@+id/icon_settings"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginBottom="24dp"
+            android:scaleType="fitCenter"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_settings"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/sidebar_item_background" />
+
+    </LinearLayout>
+
+    <!-- Category tree panel: collapses to width 0 when focus moves into the channel content -->
+    <LinearLayout
+        android:id="@+id/category_panel"
+        android:layout_width="216dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="#1A1D24">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/category_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingTop="16dp"
+            android:clipToPadding="false" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:background="#000000" />
+
+    <!-- Channel content area: inline preview section (only takes space when active),
+         top bar, then the channel list — no floating overlay. -->
+    <LinearLayout
+        android:id="@+id/content_column"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/preview_section"
+            android:layout_width="match_parent"
+            android:layout_height="180dp"
+            android:orientation="horizontal"
+            android:background="#0F1115"
+            android:visibility="gone">
+
+            <androidx.media3.ui.PlayerView
+                android:id="@+id/preview_player_view"
+                android:layout_width="280dp"
+                android:layout_height="match_parent"
+                app:use_controller="false" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/preview_channel_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/preview_now_programme"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textColor="#6FA8DC"
+                    android:textSize="14sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/preview_next_programme"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#AAAAAA"
+                    android:textSize="13sp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="12dp">
+
+            <TextView
+                android:id="@+id/content_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/category_all_channels"
+                android:textColor="#FFFFFF"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/view_toggle_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                android:padding="10dp"
+                android:text="@string/grid_view_label"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:background="@drawable/sidebar_item_background" />
+
+            <TextView
+                android:id="@+id/main_clock_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/channel_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:paddingHorizontal="8dp"
+            android:clipToPadding="false" />
+
+    </LinearLayout>
+
+</LinearLayout>
+
+    <!-- Floating label for whichever rail icon currently has focus. Positioned dynamically
+         (top margin set in code to line up with the focused icon) rather than laid out
+         statically, since it needs to track focus up and down the rail. -->
+    <TextView
+        android:id="@+id/rail_tooltip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="72dp"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="8dp"
+        android:background="@drawable/rail_tooltip_background"
+        android:textColor="#FFFFFF"
+        android:textSize="14sp"
+        android:elevation="12dp"
+        android:visibility="gone" />
+
+</FrameLayout>

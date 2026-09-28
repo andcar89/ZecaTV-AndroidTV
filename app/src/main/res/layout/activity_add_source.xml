@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_color"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="32dp">
+
+        <TextView
+            android:id="@+id/screen_title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/add_source_title"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="24dp" />
+
+        <EditText
+            android:id="@+id/playlist_name_edit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:hint="@string/hint_playlist_name"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#888888"
+            android:singleLine="true" />
+
+        <RadioGroup
+            android:id="@+id/source_type_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/radio_m3u_url"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:button="@null"
+                android:background="@drawable/tv_toggle_button_background"
+                android:gravity="center"
+                android:paddingVertical="14dp"
+                android:textColor="#FFFFFF"
+                android:text="@string/radio_m3u_url" />
+
+            <RadioButton
+                android:id="@+id/radio_m3u_file"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:button="@null"
+                android:background="@drawable/tv_toggle_button_background"
+                android:gravity="center"
+                android:paddingVertical="14dp"
+                android:textColor="#FFFFFF"
+                android:text="@string/radio_m3u_file" />
+
+            <RadioButton
+                android:id="@+id/radio_xtream"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="16dp"
+                android:button="@null"
+                android:background="@drawable/tv_toggle_button_background"
+                android:gravity="center"
+                android:paddingVertical="14dp"
+                android:textColor="#FFFFFF"
+                android:text="@string/radio_xtream" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/m3u_url_fields"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <EditText
+                android:id="@+id/m3u_url_edit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_playlist_url"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:inputType="textUri"
+                android:singleLine="true" />
+
+            <EditText
+                android:id="@+id/m3u_epg_url_edit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="@string/hint_epg_url_optional"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:inputType="textUri"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/m3u_file_fields"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <Button
+                style="@style/TvButton"
+                android:id="@+id/pick_file_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/button_pick_file" />
+
+            <TextView
+                android:id="@+id/picked_file_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/label_no_file_selected"
+                android:textColor="#AAAAAA" />
+
+            <EditText
+                android:id="@+id/m3u_file_epg_url_edit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="@string/hint_epg_url_optional"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:inputType="textUri"
+                android:singleLine="true" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/xtream_fields"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <EditText
+                android:id="@+id/xtream_server_edit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/hint_xtream_server"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:inputType="textUri"
+                android:singleLine="true" />
+
+            <EditText
+                android:id="@+id/xtream_user_edit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:hint="@string/hint_username"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#888888"
+                android:singleLine="true" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <EditText
+                    android:id="@+id/xtream_pass_edit"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:hint="@string/hint_password"
+                    android:textColor="#FFFFFF"
+                    android:textColorHint="#888888"
+                    android:inputType="textPassword"
+                    android:singleLine="true" />
+
+                <TextView
+                    android:id="@+id/toggle_password_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:paddingHorizontal="16dp"
+                    android:paddingVertical="10dp"
+                    android:text="@string/action_show_password"
+                    android:textColor="#FFFFFF"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/sidebar_item_background" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button
+            style="@style/TvButton"
+            android:id="@+id/save_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="@string/button_save_and_load" />
+
+        <TextView
+            android:id="@+id/progress_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/label_loading"
+            android:textColor="#FFFFFF"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</ScrollView>

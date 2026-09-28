@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@color/background_color">
+
+    <ImageView
+        android:layout_width="280dp"
+        android:layout_height="270dp"
+        android:layout_marginBottom="48dp"
+        android:src="@drawable/ic_app_logo_splash"
+        android:scaleType="fitCenter" />
+
+    <Button
+        style="@style/TvButton"
+        android:id="@+id/start_add_playlist_button"
+        android:layout_width="260dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="@string/welcome_add_playlist" />
+
+    <Button
+        style="@style/TvButton"
+        android:id="@+id/start_settings_button"
+        android:layout_width="260dp"
+        android:layout_height="wrap_content"
+        android:text="@string/nav_settings" />
+
+</LinearLayout>
