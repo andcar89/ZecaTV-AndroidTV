@@ -188,3 +188,7 @@ locally), then use `./gradlew installDebug`.
   isn't wired into Android 13+'s system-level "App languages" settings screen —
   that's an optional extra (`locales_config.xml` + one manifest entry) I skipped
   to keep this round's scope contained; happy to add it if useful.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
