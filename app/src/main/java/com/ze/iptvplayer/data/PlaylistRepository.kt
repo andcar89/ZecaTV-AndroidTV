@@ -15,7 +15,6 @@ import com.ze.iptvplayer.network.LenientTls
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Request
-import java.io.ByteArrayInputStream
 
 /**
  * Simple in-memory singleton holding the currently loaded channel list and EPG data.
@@ -48,11 +47,19 @@ object PlaylistRepository {
      *  usually one, but an M3U can declare several as a comma-separated list (see EpgSourceManager). */
     private var primaryEpgUrls: List<String> = emptyList()
 
-    private val epgDataBySource = mutableMapOf<String, EpgSourceData>()
+    // Concurrent because guide data can now finish loading on a background thread while the UI is
+    // already reading it to bind channel rows (see load()'s loadEpg parameter).
+    private val epgDataBySource = java.util.concurrent.ConcurrentHashMap<String, EpgSourceData>()
 
     private val httpClient = LenientTls.newClientBuilder().build()
 
-    suspend fun load(context: Context, source: PlaylistSource): Result<List<Channel>> = withContext(Dispatchers.IO) {
+    /**
+     * Loads the channel list for [source]. By default this also downloads and parses every EPG
+     * source before returning, which on a big guide (or several) can take a long time — so a
+     * caller that wants the channel list on screen first passes [loadEpg] = false and then calls
+     * [reloadAllEpg] itself afterwards. The playlist's own EPG URLs are always recorded either way.
+     */
+    suspend fun load(context: Context, source: PlaylistSource, loadEpg: Boolean = true): Result<List<Channel>> = withContext(Dispatchers.IO) {
         try {
             var epgUrls: List<String> = emptyList()
             val list = when (source) {
@@ -87,7 +94,7 @@ object PlaylistRepository {
             channels = list
             primaryEpgUrls = epgUrls
 
-            reloadAllEpg(context)
+            if (loadEpg) reloadAllEpg(context)
 
             Result.success(list)
         } catch (e: Exception) {
@@ -110,7 +117,7 @@ object PlaylistRepository {
         loadEpgSource(sourceId, url)
     }
 
-    private val epgLoadErrors = mutableMapOf<String, String>()
+    private val epgLoadErrors = java.util.concurrent.ConcurrentHashMap<String, String>()
 
     private fun loadEpgSource(sourceId: String, url: String) {
         try {
@@ -121,10 +128,17 @@ object PlaylistRepository {
                     android.util.Log.e("PlaylistRepository", "EPG fetch failed for $url: HTTP ${resp.code}")
                     return
                 }
-                val bytes = resp.body!!.bytes()
-                val isGzip = url.endsWith(".gz") ||
-                    (bytes.size > 2 && bytes[0] == 0x1f.toByte() && bytes[1] == 0x8b.toByte())
-                val result: EpgParseResult = EpgXmlParser.parse(ByteArrayInputStream(bytes), isGzip)
+                // Parsed straight off the network stream instead of first reading the whole
+                // response into one big byte array — a large guide would otherwise sit in memory
+                // twice over (raw bytes + parsed programmes) at its peak. Peek at the first two
+                // bytes to spot gzip, then rewind so the parser still sees them.
+                val stream = java.io.BufferedInputStream(resp.body!!.byteStream(), 8192)
+                stream.mark(2)
+                val firstByte = stream.read()
+                val secondByte = stream.read()
+                stream.reset()
+                val isGzip = url.endsWith(".gz") || (firstByte == 0x1f && secondByte == 0x8b)
+                val result: EpgParseResult = EpgXmlParser.parse(stream, isGzip)
                 val nameIndex = mutableMapOf<String, String>()
                 result.channelNames.forEach { (epgChannelId, displayName) ->
                     val normalized = normalizeChannelName(displayName)

@@ -53,8 +53,9 @@ import kotlin.math.roundToInt
  * Both:
  *  - UP opens a sidebar of Audio/Subtitle tracks reported by the player.
  *  - MENU hands playback off to an external player app.
- * A single ExoPlayer instance is reused across channel switches rather than recreating
- * PlayerActivity each time, so switching feels instant rather than restarting the screen.
+ * Switching channel keeps this screen (and its sidebars) open rather than recreating
+ * PlayerActivity each time; the video itself is started on a fresh player each time, owned by
+ * PlayerHolder, which also restarts playback by itself if the decoder fails or freezes.
  */
 class PlayerActivity : AppCompatActivity() {
 
@@ -64,7 +65,9 @@ class PlayerActivity : AppCompatActivity() {
         private const val INFO_BAR_AUTO_HIDE_MS = 6000L
     }
 
-    private var player: ExoPlayer? = null
+    // Always read through the holder: it builds a brand-new player for every channel (see
+    // PlayerHolder), so a reference kept here would go stale — and be released — on the next zap.
+    private val player: ExoPlayer? get() = PlayerHolder.current()
     private lateinit var playerView: PlayerView
 
     private lateinit var channelSidebar: View
@@ -190,8 +193,12 @@ class PlayerActivity : AppCompatActivity() {
         isVod = startChannel.contentType != ContentType.LIVE
         setupSidebars()
         setupTracksSidebar()
+        // reuseIfSame = false: even if the main screen's preview was already playing this exact
+        // channel, start it on a fresh player here instead of re-pointing the preview's running
+        // decoder at this screen's surface — that handoff is what froze fullscreen on some boxes.
+        // Done BEFORE attaching this screen's view, so the old decoder is never bound to it.
+        playChannel(startChannel, reuseIfSame = false)
         initializePlayer()
-        playChannel(startChannel)
         clockHandler.post(clockRunnable)
     }
 
@@ -223,7 +230,17 @@ class PlayerActivity : AppCompatActivity() {
                     if (nowFavorite) getString(R.string.toast_added_to_favorites) else getString(R.string.toast_removed_from_favorites),
                     Toast.LENGTH_SHORT
                 ).show()
-                channelAdapter.submitList(PlaylistRepository.channelsForCategory(this, currentCategoryId))
+                val visibleChannels = PlaylistRepository.channelsForCategory(this, currentCategoryId)
+                if (currentCategoryId == PlaylistRepository.CATEGORY_FAVORITES) {
+                    // The Favorites list itself just gained/lost an entry — it has to be rebuilt.
+                    channelAdapter.submitList(visibleChannels)
+                } else {
+                    // Any other category has the same channels as before; only this row's star
+                    // changed. Re-bind just that row instead of the whole list — every row bind
+                    // does an EPG lookup and a logo load, which is real work on a TV box's CPU.
+                    val position = visibleChannels.indexOfFirst { it.key == channel.key }
+                    if (position >= 0) channelAdapter.notifyItemChanged(position)
+                }
             },
             // Matches channel_sidebar's own background (activity_player.xml) rather than the
             // layout's default background_color, which is meant for MainActivity's own background.
@@ -259,10 +276,10 @@ class PlayerActivity : AppCompatActivity() {
 
     // ---- Channel switching ---------------------------------------------------
 
-    private fun playChannel(channel: Channel) {
+    private fun playChannel(channel: Channel, reuseIfSame: Boolean = true) {
         currentChannel = channel
         isVod = channel.contentType != ContentType.LIVE
-        PlayerHolder.playChannel(this, channel)
+        PlayerHolder.playChannel(this, channel, reuseIfSame)
         if (isVod) {
             showVodControls()
         } else {
@@ -270,45 +287,45 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun initializePlayer() {
-        // Now sourced from the shared holder rather than built here — if MainActivity's preview
-        // was already playing this exact channel, this is the SAME live connection handed off,
-        // not a fresh one. See PlayerHolder for the buffering/cert-tolerance setup this carries.
-        val exoPlayer = PlayerHolder.ensurePlayer(this)
-        PlayerHolder.attach(this, playerView)
-        exoPlayer.addListener(object : Player.Listener {
-            override fun onPlayerError(error: PlaybackException) {
-                val cause = error.cause?.message ?: error.message ?: getString(R.string.error_unknown)
-                Log.e("PlayerActivity", "Playback failed for ${currentChannel?.streamUrl}", error)
-                Toast.makeText(this@PlayerActivity, getString(R.string.toast_playback_failed, cause), Toast.LENGTH_LONG).show()
-            }
-
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                stallRecoveryRunnable?.let { stallRecoveryHandler.removeCallbacks(it) }
-                stallRecoveryRunnable = null
-                if (playbackState == Player.STATE_BUFFERING) {
-                    val channelAtStall = currentChannel
-                    val runnable = Runnable {
-                        Log.w("PlayerActivity", "Playback stalled >15s for ${channelAtStall?.streamUrl}, re-preparing")
-                        player?.prepare()
-                    }
-                    stallRecoveryRunnable = runnable
-                    stallRecoveryHandler.postDelayed(runnable, 15_000L)
+    // Registered with PlayerHolder (not directly on an ExoPlayer) so it's re-attached automatically
+    // to each replacement player the holder builds on a channel switch or an automatic recovery.
+    private val playerListener = object : Player.Listener {
+        override fun onPlaybackStateChanged(playbackState: Int) {
+            stallRecoveryRunnable?.let { stallRecoveryHandler.removeCallbacks(it) }
+            stallRecoveryRunnable = null
+            if (playbackState == Player.STATE_BUFFERING) {
+                val channelAtStall = currentChannel
+                val runnable = Runnable {
+                    Log.w("PlayerActivity", "Playback stalled >15s for ${channelAtStall?.streamUrl}, re-preparing")
+                    player?.prepare()
                 }
+                stallRecoveryRunnable = runnable
+                stallRecoveryHandler.postDelayed(runnable, 15_000L)
             }
+        }
 
-            override fun onTracksChanged(tracks: Tracks) {
-                // Resolution/bitrate aren't known immediately on channel switch — only once
-                // track selection actually completes. Refresh if the bar's already showing.
-                if (infoBar.visibility == View.VISIBLE) updateInfoBarContent()
-                refreshTrackOptions(tracks)
-            }
+        override fun onTracksChanged(tracks: Tracks) {
+            // Resolution/bitrate aren't known immediately on channel switch — only once
+            // track selection actually completes. Refresh if the bar's already showing.
+            if (infoBar.visibility == View.VISIBLE) updateInfoBarContent()
+            refreshTrackOptions(tracks)
+        }
 
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                vodPlayPauseIcon.setImageResource(if (isPlaying) R.drawable.ic_player_pause else R.drawable.ic_player_play)
-            }
-        })
-        player = exoPlayer
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            vodPlayPauseIcon.setImageResource(if (isPlaying) R.drawable.ic_player_pause else R.drawable.ic_player_play)
+        }
+    }
+
+    private fun initializePlayer() {
+        // The player itself lives in PlayerHolder. Errors reach us only once its automatic
+        // recovery (rebuild the player, restart the channel) has been tried and failed.
+        PlayerHolder.attach(this, playerView)
+        PlayerHolder.addListener(playerListener)
+        PlayerHolder.errorListener = { error: PlaybackException ->
+            val cause = error.cause?.message ?: error.message ?: getString(R.string.error_unknown)
+            Log.e("PlayerActivity", "Playback failed for ${currentChannel?.streamUrl}", error)
+            Toast.makeText(this@PlayerActivity, getString(R.string.toast_playback_failed, cause), Toast.LENGTH_LONG).show()
+        }
     }
 
     // ---- Audio/subtitle tracks ------------------------------------------------
@@ -686,11 +703,10 @@ class PlayerActivity : AppCompatActivity() {
         vodProgressHandler.removeCallbacks(vodProgressRunnable)
         clockHandler.removeCallbacks(clockRunnable)
         stallRecoveryRunnable?.let { stallRecoveryHandler.removeCallbacks(it) }
-        // Actually ends playback — this is leaving fullscreen entirely, not handing off to
-        // another screen (that direction, preview -> fullscreen, is PlayerHolder.playChannel's
-        // same-channel no-op; there's no equivalent "fullscreen -> preview" handoff to protect
-        // here, since returning to MainActivity doesn't auto-resume a preview).
+        // Actually ends playback — this is leaving fullscreen entirely. Returning to MainActivity
+        // doesn't auto-resume a preview, so there's nothing to hand the player back to.
+        PlayerHolder.removeListener(playerListener)
+        PlayerHolder.errorListener = null
         PlayerHolder.release()
-        player = null
     }
 }

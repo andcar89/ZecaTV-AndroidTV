@@ -47,6 +47,12 @@ class ChannelListAdapter(
         notifyDataSetChanged()
     }
 
+    /** Re-binds every row in place (same list, same positions, so scroll position and focus
+     *  stay put) — for when data the rows show, like EPG now/next, arrives after first display. */
+    fun rebindAll() {
+        notifyItemRangeChanged(0, itemCount)
+    }
+
     fun setGridMode(grid: Boolean) {
         if (isGrid == grid) return
         isGrid = grid

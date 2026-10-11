@@ -108,10 +108,14 @@ class MainActivity : AppCompatActivity() {
 
         if (PlaylistRepository.channels.isEmpty()) {
             lifecycleScope.launch {
-                val result = PlaylistRepository.load(this@MainActivity, playlist.source)
+                // Channel list first, guide data after: waiting for every EPG source to download
+                // and parse before drawing anything left the screen blank for a long time on a
+                // cold start (e.g. when the app is restarted after being killed in the background).
+                val result = PlaylistRepository.load(this@MainActivity, playlist.source, loadEpg = false)
                 result.onSuccess {
                     loadedPlaylistId = playlist.id
                     setupUi()
+                    loadEpgInBackground()
                 }.onFailure { e ->
                     Toast.makeText(this@MainActivity, getString(R.string.toast_failed_load_playlist, e.message), Toast.LENGTH_LONG).show()
                     startActivity(Intent(this@MainActivity, AddSourceActivity::class.java))
@@ -150,7 +154,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         lifecycleScope.launch {
-            val result = PlaylistRepository.load(this@MainActivity, playlist.source)
+            val result = PlaylistRepository.load(this@MainActivity, playlist.source, loadEpg = false)
             result.onSuccess {
                 loadedPlaylistId = playlist.id
                 updateSectionIconsVisibility()
@@ -162,9 +166,20 @@ class MainActivity : AppCompatActivity() {
                 }
                 categoryAdapter.updateCategories(buildCategoryEntries(), targetCategory)
                 selectCategory(targetCategory)
+                loadEpgInBackground()
             }.onFailure { e ->
                 Toast.makeText(this@MainActivity, getString(R.string.toast_failed_load_playlist, e.message), Toast.LENGTH_LONG).show()
             }
+        }
+    }
+
+    /** Downloads and parses every EPG source while the channel list is already on screen, then
+     *  re-binds the visible rows in place so their now/next lines fill in without moving the
+     *  user's scroll position or focus. */
+    private fun loadEpgInBackground() {
+        lifecycleScope.launch {
+            PlaylistRepository.reloadAllEpg(this@MainActivity)
+            if (uiReady) channelAdapter.rebindAll()
         }
     }
 
