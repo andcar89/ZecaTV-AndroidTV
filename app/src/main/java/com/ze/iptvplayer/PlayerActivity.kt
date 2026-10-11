@@ -54,8 +54,9 @@ import kotlin.math.roundToInt
  *  - UP opens a sidebar of Audio/Subtitle tracks reported by the player.
  *  - MENU hands playback off to an external player app.
  * Switching channel keeps this screen (and its sidebars) open rather than recreating
- * PlayerActivity each time; the video itself is started on a fresh player each time, owned by
- * PlayerHolder, which also restarts playback by itself if the decoder fails or freezes.
+ * PlayerActivity each time; the video itself is owned by PlayerHolder, which takes over the
+ * preview's running player when going fullscreen, starts each different channel on a fresh player,
+ * and restarts playback by itself if the decoder fails or freezes.
  */
 class PlayerActivity : AppCompatActivity() {
 
@@ -193,12 +194,12 @@ class PlayerActivity : AppCompatActivity() {
         isVod = startChannel.contentType != ContentType.LIVE
         setupSidebars()
         setupTracksSidebar()
-        // reuseIfSame = false: even if the main screen's preview was already playing this exact
-        // channel, start it on a fresh player here instead of re-pointing the preview's running
-        // decoder at this screen's surface — that handoff is what froze fullscreen on some boxes.
-        // Done BEFORE attaching this screen's view, so the old decoder is never bound to it.
-        playChannel(startChannel, reuseIfSame = false)
+        // If MainActivity's preview was already playing this exact channel, attaching here takes
+        // over that SAME running player (playChannel below is then a no-op) — the instant
+        // preview -> fullscreen handoff. PlayerHolder's freeze detector restarts the channel by
+        // itself if that handoff ever leaves the picture frozen.
         initializePlayer()
+        playChannel(startChannel)
         clockHandler.post(clockRunnable)
     }
 

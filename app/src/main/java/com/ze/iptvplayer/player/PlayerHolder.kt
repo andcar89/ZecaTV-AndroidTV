@@ -9,9 +9,11 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.datasource.okhttp.OkHttpDataSource
+import androidx.media3.exoplayer.DecoderCounters
 import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import com.ze.iptvplayer.model.Channel
@@ -26,20 +28,20 @@ import java.util.concurrent.CopyOnWriteArrayList
  * Built with the Application context (not tied to whichever Activity creates it). [attach]/[detach]
  * bind/unbind a screen's own PlayerView; [release] actually stops playback and tears the player down.
  *
- * Why every channel gets a brand-new ExoPlayer (see [playChannel]): some Android TV boxes —
- * notably Amlogic-based ones, whose hardware decoder shows up as "c2.amlogic.avc.decoder" — don't
- * survive ExoPlayer reusing one already-running decoder across a channel switch or across a change
- * of video surface. The visible symptoms are a frozen picture or a "Decoder failed" error that
- * needs the channel reloaded by hand. Starting each channel on a fresh player (and so a fresh
- * decoder) avoids that, and costs very little since the connection has to be re-opened for a new
- * stream anyway.
+ * Going fullscreen from the preview hands the SAME running player (and its live connection) over
+ * to the fullscreen screen: [playChannel] is a no-op when asked for the channel already playing.
+ * Switching to a DIFFERENT channel builds a brand-new ExoPlayer, and so a fresh video decoder.
+ * That matters on some Android TV boxes — notably Amlogic-based ones, whose hardware decoder shows
+ * up as "c2.amlogic.avc.decoder" — which don't survive ExoPlayer re-pointing one running decoder
+ * at a new stream or surface: the picture freezes or playback fails with "Decoder failed".
  *
- * As a second line of defense, a failure that still happens heals itself instead of leaving the
- * user stuck: a playback error, or a picture that never appears even though playback reports it's
- * ready, rebuilds the player and restarts the same channel, up to [MAX_AUTO_RECOVERIES] times in a
- * row. Only after those are used up is the error handed to [errorListener] to show the user.
+ * As a safety net for that (and for any freeze mid-viewing), a freeze detector watches whether
+ * video frames are actually being drawn while playback says it's running. If they stop for a few
+ * seconds, or playback errors out, the player is rebuilt and the same channel restarted, up to
+ * [MAX_AUTO_RECOVERIES] times in a row. Only after those are used up is an error handed to
+ * [errorListener] to show the user.
  *
- * Because the player instance changes, screens must NOT keep their own reference to it: use
+ * Because the player instance can change, screens must NOT keep their own reference to it: use
  * [current] when you need it, [addListener]/[removeListener] for events (re-attached to each new
  * instance automatically), and [errorListener] for errors that couldn't be recovered.
  */
@@ -52,12 +54,12 @@ object PlayerHolder {
     /** Pause before restarting, so the old decoder is fully released before a new one is made. */
     private const val RECOVERY_DELAY_MS = 400L
 
-    /** How long a channel may be "ready to play" without a single frame on screen before we call
-     *  the decoder stuck. Only checked while the player says it's READY — a stream that's still
-     *  buffering because the network is slow is not treated as stuck. */
-    private const val FIRST_FRAME_TIMEOUT_MS = 8_000L
-    private const val FIRST_FRAME_RECHECK_MS = 4_000L
-    private const val FIRST_FRAME_MAX_CHECKS = 6
+    /** The freeze detector looks at the rendered-frame count this often; this many checks in a
+     *  row with no new frame (while the player says it's ready and playing) counts as frozen —
+     *  about 4.5 seconds. Checks that don't qualify (still buffering, paused, no video track, no
+     *  screen attached) never count towards this. */
+    private const val FREEZE_CHECK_INTERVAL_MS = 1_500L
+    private const val FREEZE_CHECKS_BEFORE_RECOVERY = 3
 
     private var player: ExoPlayer? = null
     private var appContext: Context? = null
@@ -76,9 +78,12 @@ object PlayerHolder {
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private var recoveryAttempts = 0
-    private var firstFrameRendered = false
-    private var watchdogChecks = 0
-    private val watchdogRunnable = Runnable { onWatchdogTick() }
+
+    // Freeze detector state. videoCounters is the video renderer's own tally of drawn frames.
+    private var videoCounters: DecoderCounters? = null
+    private var lastRenderedCount = -1
+    private var stalledChecks = 0
+    private val freezeCheckRunnable = Runnable { onFreezeCheck() }
 
     // One shared HTTP client for every player instance, so connections/threads are reused instead
     // of rebuilt each time a channel starts. LenientTls tolerates the broken cert chains common
@@ -86,17 +91,21 @@ object PlayerHolder {
     private val httpClient: OkHttpClient by lazy { LenientTls.newClientBuilder().build() }
 
     private val internalListener = object : Player.Listener {
-        override fun onRenderedFirstFrame() {
-            firstFrameRendered = true
-            recoveryAttempts = 0
-            mainHandler.removeCallbacks(watchdogRunnable)
-        }
-
         override fun onPlayerError(error: PlaybackException) {
             Log.e(TAG, "Playback error on ${currentChannel?.streamUrl}: ${error.errorCodeName}", error)
             if (!tryAutoRecover("error ${error.errorCodeName}")) {
                 errorListener?.invoke(error)
             }
+        }
+    }
+
+    private val analyticsListener = object : AnalyticsListener {
+        override fun onVideoEnabled(eventTime: AnalyticsListener.EventTime, decoderCounters: DecoderCounters) {
+            videoCounters = decoderCounters
+        }
+
+        override fun onVideoDisabled(eventTime: AnalyticsListener.EventTime, decoderCounters: DecoderCounters) {
+            if (videoCounters === decoderCounters) videoCounters = null
         }
     }
 
@@ -124,6 +133,7 @@ object PlayerHolder {
             .setLoadControl(loadControl)
             .build()
         newPlayer.addListener(internalListener)
+        newPlayer.addAnalyticsListener(analyticsListener)
         appListeners.forEach { newPlayer.addListener(it) }
         player = newPlayer
         boundView?.player = newPlayer
@@ -133,7 +143,8 @@ object PlayerHolder {
     /** Stops and releases the current ExoPlayer (and its decoder) but keeps the registered
      *  listeners and the bound view, so a replacement can pick them straight back up. */
     private fun releasePlayerInstance() {
-        mainHandler.removeCallbacks(watchdogRunnable)
+        mainHandler.removeCallbacks(freezeCheckRunnable)
+        videoCounters = null
         val old = player ?: return
         player = null
         // Unbind first so the old player lets go of the video surface cleanly before release.
@@ -143,38 +154,65 @@ object PlayerHolder {
 
     private fun startPlayback(channel: Channel) {
         val exoPlayer = player ?: createPlayer(appContext ?: return)
-        firstFrameRendered = false
         exoPlayer.setMediaItem(MediaItem.fromUri(Uri.parse(channel.streamUrl)))
         exoPlayer.prepare()
         exoPlayer.playWhenReady = true
-        armWatchdog()
+        armFreezeDetector()
     }
 
     // ---- Self-healing --------------------------------------------------------------------
 
-    private fun armWatchdog() {
-        mainHandler.removeCallbacks(watchdogRunnable)
-        watchdogChecks = 0
-        mainHandler.postDelayed(watchdogRunnable, FIRST_FRAME_TIMEOUT_MS)
+    /** Forgets what the detector has seen so far, so the next check starts a fresh comparison.
+     *  Used whenever the picture's destination changes (new stream, new screen's surface). */
+    private fun resetFreezeBaseline() {
+        lastRenderedCount = -1
+        stalledChecks = 0
     }
 
-    private fun onWatchdogTick() {
+    private fun armFreezeDetector() {
+        resetFreezeBaseline()
+        mainHandler.removeCallbacks(freezeCheckRunnable)
+        mainHandler.postDelayed(freezeCheckRunnable, FREEZE_CHECK_INTERVAL_MS)
+    }
+
+    private fun onFreezeCheck() {
         val exoPlayer = player ?: return
-        if (firstFrameRendered) return
-        // "Stuck" means: the player says it's ready and has a video track, a screen is attached to
-        // show it on — and yet no frame has ever appeared. Still buffering (slow network) or a
-        // stream with no video at all (radio) is not stuck, so those are left alone.
-        val stuck = exoPlayer.playbackState == Player.STATE_READY &&
+        val counters = videoCounters
+
+        // Only judge when video genuinely should be appearing: the player is ready and playing, has
+        // a video track, and a screen is attached to show it on. Otherwise (buffering on a slow
+        // network, paused, a radio stream, the instant between two screens) just start over.
+        val shouldBeRendering = counters != null &&
+            exoPlayer.playbackState == Player.STATE_READY &&
+            exoPlayer.playWhenReady &&
             exoPlayer.videoFormat != null &&
             boundView != null
-        if (stuck) {
-            tryAutoRecover("ready but no video frame after ${FIRST_FRAME_TIMEOUT_MS / 1000}s")
+        if (!shouldBeRendering) {
+            resetFreezeBaseline()
+            mainHandler.postDelayed(freezeCheckRunnable, FREEZE_CHECK_INTERVAL_MS)
             return
         }
-        watchdogChecks++
-        if (watchdogChecks < FIRST_FRAME_MAX_CHECKS) {
-            mainHandler.postDelayed(watchdogRunnable, FIRST_FRAME_RECHECK_MS)
+
+        counters!!.ensureUpdated()
+        val rendered = counters.renderedOutputBufferCount
+        when {
+            lastRenderedCount < 0 -> lastRenderedCount = rendered // first look: just take a baseline
+            rendered > lastRenderedCount -> {
+                // Frames are flowing. Also proves the last recovery (if any) worked.
+                lastRenderedCount = rendered
+                stalledChecks = 0
+                recoveryAttempts = 0
+            }
+            else -> {
+                stalledChecks++
+                if (stalledChecks >= FREEZE_CHECKS_BEFORE_RECOVERY) {
+                    stalledChecks = 0
+                    // Recovery rebuilds the player and re-arms this detector itself.
+                    if (tryAutoRecover("no video frame drawn for ${FREEZE_CHECKS_BEFORE_RECOVERY * FREEZE_CHECK_INTERVAL_MS / 1000.0}s while playing")) return
+                }
+            }
         }
+        mainHandler.postDelayed(freezeCheckRunnable, FREEZE_CHECK_INTERVAL_MS)
     }
 
     /** Rebuilds the player and restarts the current channel. Returns false (doing nothing) once
@@ -184,7 +222,7 @@ object PlayerHolder {
         if (recoveryAttempts >= MAX_AUTO_RECOVERIES) return false
         recoveryAttempts++
         Log.w(TAG, "Auto-recovering ${channel.name} (attempt $recoveryAttempts/$MAX_AUTO_RECOVERIES): $reason")
-        mainHandler.removeCallbacks(watchdogRunnable)
+        mainHandler.removeCallbacks(freezeCheckRunnable)
         mainHandler.postDelayed({
             // The user may have switched channel or left the player while we waited.
             if (currentChannel?.key != channel.key) return@postDelayed
@@ -198,8 +236,8 @@ object PlayerHolder {
 
     // ---- Public API ----------------------------------------------------------------------
 
-    /** The live player right now, or null if none exists. Don't hold on to it — it is replaced on
-     *  every channel switch. */
+    /** The live player right now, or null if none exists. Don't hold on to it — it can be
+     *  replaced on a channel switch or an automatic recovery. */
     fun current(): ExoPlayer? = player
 
     /** Registers [listener] on the current player and on every replacement created later. */
@@ -216,9 +254,9 @@ object PlayerHolder {
     fun ensurePlayer(context: Context): ExoPlayer = player ?: createPlayer(context)
 
     /**
-     * Starts playing [channel]. Normally a different channel (or [reuseIfSame] = false) gets a
-     * brand-new player; see the class comment for why. With [reuseIfSame] = true, asking for the
-     * channel that's already playing is a no-op that keeps the existing connection.
+     * Starts playing [channel]. If it's already the playing channel and [reuseIfSame] is true,
+     * this is a no-op that keeps the existing connection (the preview -> fullscreen handoff).
+     * Any other channel gets a brand-new player; see the class comment for why.
      */
     fun playChannel(context: Context, channel: Channel, reuseIfSame: Boolean = true) {
         appContext = context.applicationContext
@@ -233,8 +271,11 @@ object PlayerHolder {
     /** Binds the player to [playerView] so it renders there. */
     fun attach(context: Context, playerView: PlayerView) {
         appContext = context.applicationContext
+        val viewChanged = boundView !== playerView
         boundView = playerView
         playerView.player = player ?: createPlayer(context)
+        // A different screen's surface: whether frames reach it is a fresh question.
+        if (viewChanged) resetFreezeBaseline()
     }
 
     /** Unbinds the player from [playerView] WITHOUT stopping playback. */
