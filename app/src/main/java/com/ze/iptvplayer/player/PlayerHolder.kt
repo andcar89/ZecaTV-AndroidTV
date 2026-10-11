@@ -60,6 +60,10 @@ object PlayerHolder {
      *  screen attached) never count towards this. */
     private const val FREEZE_CHECK_INTERVAL_MS = 1_500L
     private const val FREEZE_CHECKS_BEFORE_RECOVERY = 3
+    // Right after a preview -> fullscreen handoff the decoder is most likely to wedge, so watch
+    // it more closely (~2 s to detect instead of ~4.5 s) until frames are seen flowing.
+    private const val FAST_CHECK_INTERVAL_MS = 500L
+    private const val FAST_CHECKS_BEFORE_RECOVERY = 4
 
     private var player: ExoPlayer? = null
     private var appContext: Context? = null
@@ -164,15 +168,20 @@ object PlayerHolder {
 
     /** Forgets what the detector has seen so far, so the next check starts a fresh comparison.
      *  Used whenever the picture's destination changes (new stream, new screen's surface). */
+    private var fastMode = false
+    private val checkIntervalMs get() = if (fastMode) FAST_CHECK_INTERVAL_MS else FREEZE_CHECK_INTERVAL_MS
+    private val checksBeforeRecovery get() = if (fastMode) FAST_CHECKS_BEFORE_RECOVERY else FREEZE_CHECKS_BEFORE_RECOVERY
+
     private fun resetFreezeBaseline() {
         lastRenderedCount = -1
         stalledChecks = 0
     }
 
     private fun armFreezeDetector() {
+        fastMode = false
         resetFreezeBaseline()
         mainHandler.removeCallbacks(freezeCheckRunnable)
-        mainHandler.postDelayed(freezeCheckRunnable, FREEZE_CHECK_INTERVAL_MS)
+        mainHandler.postDelayed(freezeCheckRunnable, checkIntervalMs)
     }
 
     private fun onFreezeCheck() {
@@ -189,7 +198,7 @@ object PlayerHolder {
             boundView != null
         if (!shouldBeRendering) {
             resetFreezeBaseline()
-            mainHandler.postDelayed(freezeCheckRunnable, FREEZE_CHECK_INTERVAL_MS)
+            mainHandler.postDelayed(freezeCheckRunnable, checkIntervalMs)
             return
         }
 
@@ -202,17 +211,19 @@ object PlayerHolder {
                 lastRenderedCount = rendered
                 stalledChecks = 0
                 recoveryAttempts = 0
+                fastMode = false
             }
             else -> {
                 stalledChecks++
-                if (stalledChecks >= FREEZE_CHECKS_BEFORE_RECOVERY) {
+                if (stalledChecks >= checksBeforeRecovery) {
+                    val secs = stalledChecks * checkIntervalMs / 1000.0
                     stalledChecks = 0
                     // Recovery rebuilds the player and re-arms this detector itself.
-                    if (tryAutoRecover("no video frame drawn for ${FREEZE_CHECKS_BEFORE_RECOVERY * FREEZE_CHECK_INTERVAL_MS / 1000.0}s while playing")) return
+                    if (tryAutoRecover("no video frame drawn for ${secs}s while playing")) return
                 }
             }
         }
-        mainHandler.postDelayed(freezeCheckRunnable, FREEZE_CHECK_INTERVAL_MS)
+        mainHandler.postDelayed(freezeCheckRunnable, checkIntervalMs)
     }
 
     /** Rebuilds the player and restarts the current channel. Returns false (doing nothing) once
@@ -275,7 +286,15 @@ object PlayerHolder {
         boundView = playerView
         playerView.player = player ?: createPlayer(context)
         // A different screen's surface: whether frames reach it is a fresh question.
-        if (viewChanged) resetFreezeBaseline()
+        if (viewChanged) {
+            resetFreezeBaseline()
+            // A handoff of a live stream is the risky moment: watch closely until frames flow.
+            if (currentChannel != null && player != null) {
+                fastMode = true
+                mainHandler.removeCallbacks(freezeCheckRunnable)
+                mainHandler.postDelayed(freezeCheckRunnable, checkIntervalMs)
+            }
+        }
     }
 
     /** Unbinds the player from [playerView] WITHOUT stopping playback. */
