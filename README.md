@@ -2,6 +2,8 @@
 
 Native Kotlin app for Android TV / Google TV. Leanback UI, ExoPlayer (Media3) playback.
 
+**Looking for the phone version?** See [ZecaTV for Android phones](https://github.com/andcar89/ZecaTV-Android) — a touch-first build for Android 14+ that shares this app's playlist and EPG code.
+
 > **Note:** This app was built with AI assistance (Claude, by Anthropic) — every feature, fix, and line in this repo was written by Claude, prompted and directed by a human. It's a personal project, provided as-is with no warranty; use it at your own discretion.
 
 ## Features
